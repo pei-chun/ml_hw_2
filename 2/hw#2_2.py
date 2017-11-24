@@ -6,7 +6,6 @@ Created on Thu Nov 23 00:53:12 2017
 @author: kathy
 """
 
-import pandas as pd
 import numpy as np
 from scipy.io import  loadmat
 import matplotlib.pyplot as plt
@@ -37,11 +36,10 @@ def mu(j, M):
     mu = 2*j/M
     return mu
 
-def design_matrix(N, M):
+def design_matrix(data, N, M):
     """
         make the design matrix phi
     """
-    data, target = load()
     x_basis = sigma((data[0:N]-mu(0,M))/s)
     for j in list(range(1, M)):
         x_basis = np.hstack((x_basis, sigma((data[0:N]-mu(j,M))/s)))
@@ -62,7 +60,25 @@ def mean_vector(m0, S0, Phi, SN, t):
     """
     mN = np.dot(SN, np.dot(np.linalg.inv(S0), m0) + np.dot(Phi.T, t))
     return mN
-    
+
+def variance(Phi, SN, N):
+    """
+        var = 1 + phi(x).T*SN*phi(x)
+    """
+    var = 1 + np.dot(np.dot(Phi[0, :].T, SN), Phi[0, :])
+    for n in list(range(1, N)):
+        var = np.vstack((var, 1 + np.dot(np.dot(Phi[n, :].T, SN), Phi[n, :])))
+    return var
+
+def getCurve(N, w, Phi):
+    """
+        y(x, w) = w.T*phi(x)
+    """
+    y = np.dot(w.T, Phi[0, :])
+    for n in list(range(1, N)):
+        y = np.vstack((y, np.dot(w.T, Phi[n, :])))
+    return y
+
 if __name__ == '__main__':
     
     # loading data
@@ -72,16 +88,16 @@ if __name__ == '__main__':
     M = 7
     s = 0.1
     N = [10, 15, 30, 80]
-    [phi_10, phi_15, phi_30, phi_80] = [design_matrix(N[0], M), \
-                                        design_matrix(N[1], M), \
-                                        design_matrix(N[2], M), \
-                                        design_matrix(N[3], M)]
+    [phi_10, phi_15, phi_30, phi_80] = [design_matrix(data, N[0], M), \
+                                        design_matrix(data, N[1], M), \
+                                        design_matrix(data, N[2], M), \
+                                        design_matrix(data, N[3], M)]
     
     ###--- problem1 ---###
     # innitial setting
     print ('<---mean vector m_N & covariance matrix S_N--->\n')
     m0 = np.zeros((M,1))
-    S0 = np.linalg.inv(10**(-6)*np.identity(M))
+    S0 = np.linalg.inv(np.dot(10**(-6), np.identity(M)))
     # covariance matrix & mean vector
     [S10, S15, S30, S80] = [covar_matrix(S0, phi_10), \
                             covar_matrix(S0, phi_15), \
@@ -100,5 +116,46 @@ if __name__ == '__main__':
     
     ###--- Problem2 ---###
     print ('<--- ﬁve curve samples from the parameter posterior distribution--->\n')
+    w10 = np.random.multivariate_normal(m10.reshape(-1), S10)
+    
+    ###--- Problem3 ---###
+    print ('<---  the predictive distribution of target value --->\n')    
+    x = np.linspace(0, 2, 100)
+    new_phi = design_matrix(x.reshape(len(x),1), len(x), M)
+    # mean curve
+    [y10, y15, y30, y80] = [getCurve(len(x), m10, new_phi), \
+                            getCurve(len(x), m15, new_phi), \
+                            getCurve(len(x), m30, new_phi), \
+                            getCurve(len(x), m80, new_phi)]
+    # variance
+    [v10, v15, v30, v80] = [variance(new_phi, S10, len(x)), \
+                            variance(new_phi, S15, len(x)), \
+                            variance(new_phi, S30, len(x)), \
+                            variance(new_phi, S80, len(x))]
+    # standard deviation
+    [sd10, sd15, sd30, sd80] = [np.sqrt(v10), np.sqrt(v15), np.sqrt(v30), np.sqrt(v80)]
+    # region of variance 
+    [up10, up15, up30, up80] = [y10 + sd10, y15 + sd15, y30 + sd30, y80 + sd80]
+    [low10, low15, low30, low80] = [y10 - sd10, y15 - sd15, y30 - sd30, y80 - sd80]
+    # print Fig. 3.8
+    plt.figure(0)
+    plt.plot(data[0:N[0]], target[0:N[0]], 'o', label='target value')
+    plt.plot(x, y10, '-')
+    plt.fill_between(x, up10.reshape(-1), low10.reshape(-1), color='pink')
+
+    plt.figure(1)
+    plt.plot(data[0:N[1]], target[0:N[1]], 'o', label='target value')
+    plt.plot(x, y15, '-')
+    plt.fill_between(x, up15.reshape(-1), low15.reshape(-1), color='pink')
+
+    plt.figure(2)
+    plt.plot(data[0:N[2]], target[0:N[2]], 'o', label='target value')
+    plt.plot(x, y30, '-')
+    plt.fill_between(x, up30.reshape(-1), low30.reshape(-1), color='pink')
+
+    plt.figure(3)
+    plt.plot(data[0:N[3]], target[0:N[3]], 'o', label='target value')
+    plt.plot(x, y80, '-')
+    plt.fill_between(x, up80.reshape(-1), low80.reshape(-1), color='pink')
     
     
