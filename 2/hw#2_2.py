@@ -92,6 +92,8 @@ if __name__ == '__main__':
                                         design_matrix(data, N[1], M), \
                                         design_matrix(data, N[2], M), \
                                         design_matrix(data, N[3], M)]
+    x = np.linspace(0, 2, 100)
+    new_phi = design_matrix(x.reshape(len(x),1), len(x), M)
     
     ###--- problem1 ---###
     # innitial setting
@@ -116,12 +118,36 @@ if __name__ == '__main__':
     
     ###--- Problem2 ---###
     print ('<--- ﬁve curve samples from the parameter posterior distribution--->\n')
-    w10 = np.random.multivariate_normal(m10.reshape(-1), S10)
+    # print Fig. 3.9
+    plt.figure(0)
+    plt.plot(data[0:N[0]], target[0:N[0]], 'o', label='target value')
+    for i in list(range(5)):
+        w10 = np.random.multivariate_normal(m10.reshape(-1), S10)
+        sc10 = getCurve(len(x), w10.reshape(7, 1), new_phi)
+        plt.plot(x, sc10, 'r--')
+        
+    plt.figure(1)
+    plt.plot(data[0:N[1]], target[0:N[1]], 'o', label='target value')
+    for i in list(range(5)):
+        w15 = np.random.multivariate_normal(m15.reshape(-1), S15)
+        sc15 = getCurve(len(x), w15.reshape(7, 1), new_phi)
+        plt.plot(x, sc15, 'r--')
     
+    plt.figure(2)
+    plt.plot(data[0:N[2]], target[0:N[2]], 'o', label='target value')
+    for i in list(range(5)):
+        w30 = np.random.multivariate_normal(m30.reshape(-1), S30)
+        sc30 = getCurve(len(x), w30.reshape(7, 1), new_phi)
+        plt.plot(x, sc30, 'r--')
+        
+    plt.figure(3)
+    plt.plot(data[0:N[3]], target[0:N[3]], 'o', label='target value')
+    for i in list(range(5)):
+        w80 = np.random.multivariate_normal(m80.reshape(-1), S80)
+        sc80 = getCurve(len(x), w80.reshape(7, 1), new_phi)
+        plt.plot(x, sc80, 'r--')
     ###--- Problem3 ---###
     print ('<---  the predictive distribution of target value --->\n')    
-    x = np.linspace(0, 2, 100)
-    new_phi = design_matrix(x.reshape(len(x),1), len(x), M)
     # mean curve
     [y10, y15, y30, y80] = [getCurve(len(x), m10, new_phi), \
                             getCurve(len(x), m15, new_phi), \
@@ -138,24 +164,24 @@ if __name__ == '__main__':
     [up10, up15, up30, up80] = [y10 + sd10, y15 + sd15, y30 + sd30, y80 + sd80]
     [low10, low15, low30, low80] = [y10 - sd10, y15 - sd15, y30 - sd30, y80 - sd80]
     # print Fig. 3.8
-    plt.figure(0)
+    plt.figure(4)
     plt.plot(data[0:N[0]], target[0:N[0]], 'o', label='target value')
-    plt.plot(x, y10, '-')
+    plt.plot(x, y10, 'r-')
     plt.fill_between(x, up10.reshape(-1), low10.reshape(-1), color='pink')
 
-    plt.figure(1)
+    plt.figure(5)
     plt.plot(data[0:N[1]], target[0:N[1]], 'o', label='target value')
-    plt.plot(x, y15, '-')
+    plt.plot(x, y15, 'r-')
     plt.fill_between(x, up15.reshape(-1), low15.reshape(-1), color='pink')
 
-    plt.figure(2)
+    plt.figure(6)
     plt.plot(data[0:N[2]], target[0:N[2]], 'o', label='target value')
-    plt.plot(x, y30, '-')
+    plt.plot(x, y30, 'r-')
     plt.fill_between(x, up30.reshape(-1), low30.reshape(-1), color='pink')
 
-    plt.figure(3)
+    plt.figure(7)
     plt.plot(data[0:N[3]], target[0:N[3]], 'o', label='target value')
-    plt.plot(x, y80, '-')
+    plt.plot(x, y80, 'r-')
     plt.fill_between(x, up80.reshape(-1), low80.reshape(-1), color='pink')
     
     
