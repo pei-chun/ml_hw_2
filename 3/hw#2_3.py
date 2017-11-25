@@ -8,7 +8,6 @@ Created on Sat Nov 25 00:08:44 2017
 
 import pandas as pd
 import numpy as np
-from scipy.io import  loadmat
 import matplotlib.pyplot as plt
 
 def load():
@@ -26,9 +25,9 @@ def activations(w, phi,t):
     """
         activations
     """
-    a = np.dot(w, phi[0].reshape(13, 1))
+    a = np.dot(w, phi[0].reshape(len(phi.T), 1))
     for n in list(range(1, len(t))):
-        a = np.vstack((a, np.dot(w, phi[n].reshape(13, 1))))
+        a = np.vstack((a, np.dot(w, phi[n].reshape(len(phi.T), 1))))
     return a
 
 def soft(a1, a2, a3, t):
@@ -44,18 +43,18 @@ def gradient(y, k, t, phi):
     """
         gradient
     """
-    D = (y[0]-t[0, k-1])*phi[0].reshape(1, 13)
+    D = (y[0]-t[0, k-1])*phi[0].reshape(1, len(phi.T))
     for n in list(range(1, len(t))):
-        D = D + (y[n]-t[n, k-1])*phi[n].reshape(1, 13)
+        D = D + (y[n]-t[n, k-1])*phi[n].reshape(1, len(phi.T))
     return D
 
 def Hessian(y, phi, t):
     """
         Hessian matrix
     """
-    H = y[0]*(1-y[0])*np.dot(phi[0].reshape(13,1), phi[0].reshape(1, 13))
+    H = y[0]*(1-y[0])*np.dot(phi[0].reshape(len(phi.T),1), phi[0].reshape(1, len(phi.T)))
     for n in list(range(1, len(t))):
-        H = H + y[n]*(1-y[n])*np.dot(phi[n].reshape(13,1), phi[n].reshape(1, 13))
+        H = H + y[n]*(1-y[n])*np.dot(phi[n].reshape(len(phi.T),1), phi[n].reshape(1, len(phi.T)))
     return H
 
 def cross(y1, y2, y3, t):
@@ -109,4 +108,54 @@ if __name__ == '__main__':
     at1, at2, at3 = activations(w1, test, test), activations(w2, test, test), activations(w3, test, test)
     yt1, yt2, yt3 = soft(at1, at2, at3, test), soft(at2, at1, at3, test), soft(at3, at2, at1, test)
     yt = np.hstack((yt1, yt2, yt3))
-    print(round(yt))
+    print(np.round(yt))
+    
+    ##--- problem3-3 ---###
+    for n in range(13):
+        plt.figure(n+1)
+        plt.hist(phi[0:49, n], alpha = 0.5, color='r', label = 'class1')
+        plt.hist(phi[49:110, n], alpha = 0.5, color= 'g', label = 'class2')
+        plt.hist(phi[110:148, n], alpha = 0.5, color='b', label = 'class3')
+        
+    ##--- problem3-5 ---###
+    contribute = phi[:, 0:2]
+    plt.figure(14)
+    plt.plot(contribute[0:49,0], contribute[0:49,1], 'o', color='r', label = 'class1')
+    plt.plot(contribute[49:110,0], contribute[49:110,1], 'o', color='g', label = 'class2')
+    plt.plot(contribute[110:148,0], contribute[110:148,1], 'o', color='b', label = 'class3')
+    
+    ##--- problem3-6 ---###
+    rw1, rw2, rw3 = np.zeros((1, 2)), np.zeros((1, 2)), np.zeros((1, 2))
+    I = 10**(-6)*np.identity(2)
+    epsilon = 0.001
+    ra1, ra2, ra3 = activations(rw1, contribute, target), activations(rw2, contribute, target), activations(rw3, contribute, target)
+    ry1, ry2, ry3 = soft(ra1, ra2, ra3, target), soft(ra2, ra1, ra3, target), soft(ra3, ra1, ra2, target)
+    rD1, rD2, rD3 = gradient(ry1, 1, target, contribute), gradient(ry2, 2, target, contribute), gradient(ry3, 3, target, contribute)
+    rH1, rH2, rH3 = Hessian(ry1, contribute, target)+I, Hessian(ry2, contribute, target)+I, Hessian(ry3, contribute, target)+I
+    rE = cross(ry1, ry2, ry3, target)
+    rLoss = np.hstack((rE))
+    #
+    counter = 1
+    while epsilon < rE:
+        rw1, rw2, rw3 = rw1 - np.dot(rD1, np.linalg.inv(rH1)), \
+                        rw2 - np.dot(rD2, np.linalg.inv(rH2)), \
+                        rw3 - np.dot(rD3, np.linalg.inv(rH3))
+        ra1, ra2, ra3 = activations(rw1, contribute, target), activations(rw2, contribute, target), activations(rw3, contribute, target)
+        ry1, ry2, ry3 = soft(ra1, ra2, ra3, target), soft(ra2, ra1, ra3, target), soft(ra3, ra1, ra2, target)
+        rD1, rD2, rD3 = gradient(ry1, 1, target, contribute), gradient(ry2, 2, target, contribute), gradient(ry3, 3, target, contribute)
+        rH1, rH2, rH3 = Hessian(ry1, contribute, target), Hessian(ry2, contribute, target), Hessian(ry3, contribute, target)
+        rE = cross(ry1, ry2, ry3, target)
+        rLoss = np.hstack((rLoss, rE))
+        counter = counter + 1
+    
+    #
+    plt.figure(15)
+    plt.plot(range(0, counter), rLoss)
+    
+    #
+    # test data
+    test = np.array(test)
+    rat1, rat2, rat3 = activations(rw1, test, test), activations(rw2, test, test), activations(rw3, test, test)
+    ryt1, ryt2, ryt3 = soft(rat1, rat2, rat3, test), soft(rat2, rat1, rat3, test), soft(rat3, rat2, rat1, test)
+    ryt = np.hstack((ryt1, ryt2, ryt3))
+    print(np.round(ryt))
