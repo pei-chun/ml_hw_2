@@ -127,7 +127,7 @@ if __name__ == '__main__':
     ##--- problem3-6 ---###
     rw1, rw2, rw3 = np.zeros((1, 2)), np.zeros((1, 2)), np.zeros((1, 2))
     I = 10**(-6)*np.identity(2)
-    epsilon = 0.001
+    epsilon = 142
     ra1, ra2, ra3 = activations(rw1, contribute, target), activations(rw2, contribute, target), activations(rw3, contribute, target)
     ry1, ry2, ry3 = soft(ra1, ra2, ra3, target), soft(ra2, ra1, ra3, target), soft(ra3, ra1, ra2, target)
     rD1, rD2, rD3 = gradient(ry1, 1, target, contribute), gradient(ry2, 2, target, contribute), gradient(ry3, 3, target, contribute)
@@ -154,8 +154,10 @@ if __name__ == '__main__':
     
     #
     # test data
-    test = np.array(test)
-    rat1, rat2, rat3 = activations(rw1, test, test), activations(rw2, test, test), activations(rw3, test, test)
-    ryt1, ryt2, ryt3 = soft(rat1, rat2, rat3, test), soft(rat2, rat1, rat3, test), soft(rat3, rat2, rat1, test)
+    rtest = np.array(test[:,0:2])
+    rat1, rat2, rat3 = activations(rw1, rtest, rtest), activations(rw2, rtest, rtest), activations(rw3, rtest, rtest)
+    ryt1, ryt2, ryt3 = soft(rat1, rat2, rat3, rtest), soft(rat2, rat1, rat3, rtest), soft(rat3, rat2, rat1, rtest)
     ryt = np.hstack((ryt1, ryt2, ryt3))
+    for n in range(30):
+        ryt[n, np.argmax(ryt[n])] = 1
     print(np.round(ryt))
