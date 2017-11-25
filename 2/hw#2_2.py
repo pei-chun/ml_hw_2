@@ -125,7 +125,7 @@ if __name__ == '__main__':
         w10 = np.random.multivariate_normal(m10.reshape(-1), S10)
         sc10 = getCurve(len(x), w10.reshape(7, 1), new_phi)
         plt.plot(x, sc10, 'r--')
-        
+    
     plt.figure(1)
     plt.plot(data[0:N[1]], target[0:N[1]], 'o', label='target value')
     for i in list(range(5)):
@@ -146,6 +146,7 @@ if __name__ == '__main__':
         w80 = np.random.multivariate_normal(m80.reshape(-1), S80)
         sc80 = getCurve(len(x), w80.reshape(7, 1), new_phi)
         plt.plot(x, sc80, 'r--')
+    
     ###--- Problem3 ---###
     print ('<---  the predictive distribution of target value --->\n')    
     # mean curve
