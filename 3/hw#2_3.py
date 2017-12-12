@@ -5,7 +5,6 @@ Created on Sat Nov 25 00:08:44 2017
 
 @author: kathy
 """
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -84,6 +83,19 @@ if __name__ == '__main__':
     H1, H2, H3 = Hessian(y1, phi, target)+I, Hessian(y2, phi, target)+I, Hessian(y3, phi, target)+I
     E = cross(y1, y2, y3, target)
     Loss = np.hstack((E))
+    """-----------"""
+    y = np.hstack((y1, y2, y3))
+    for n in range(len(target)):
+        y[n, np.argmax(y[n])] = 1
+    y = np.round(y)
+    accuracy = 0
+    accuracy_rate = []
+    for n in range(len(target)):
+        if np.argmax(y[n]) == np.argmax(target[n]):
+            accuracy = accuracy + 1
+    accuracy = accuracy/len(target)
+    accuracy_rate.append(accuracy)
+    """-----------"""
     #
     counter = 1
     while epsilon < E:
@@ -96,11 +108,26 @@ if __name__ == '__main__':
         H1, H2, H3 = Hessian(y1, phi, target), Hessian(y2, phi, target), Hessian(y3, phi, target)
         E = cross(y1, y2, y3, target)
         Loss = np.hstack((Loss, E))
+        """-----------"""
+        y = np.hstack((y1, y2, y3))
+        for n in range(len(target)):
+            y[n, np.argmax(y[n])] = 1
+        y = np.round(y)
+        for n in range(len(target)):
+            if np.argmax(y[n]) == np.argmax(target[n]):
+                accuracy = accuracy + 1
+        accuracy = accuracy/len(target)
+        accuracy_rate.append(accuracy)
+        """-----------"""
         counter = counter + 1
     
     ###--- problem3-1 ---###
+    # learning curve of entropy
     plt.figure(0)
     plt.plot(range(0, counter), Loss)
+    # the accuracy of classifcation
+    plt.figure(1)
+    plt.plot(range(0, counter), accuracy_rate)
     
     ###--- problem3-2 ---###
     # test data
@@ -112,14 +139,14 @@ if __name__ == '__main__':
     
     ##--- problem3-3 ---###
     for n in range(13):
-        plt.figure(n+1)
+        plt.figure(n+2)
         plt.hist(phi[0:49, n], alpha = 0.5, color='r', label = 'class1')
         plt.hist(phi[49:110, n], alpha = 0.5, color= 'g', label = 'class2')
         plt.hist(phi[110:148, n], alpha = 0.5, color='b', label = 'class3')
         
     ##--- problem3-5 ---###
     contribute = phi[:, 0:2]
-    plt.figure(14)
+    plt.figure(16)
     plt.plot(contribute[0:49,0], contribute[0:49,1], 'o', color='r', label = 'class1')
     plt.plot(contribute[49:110,0], contribute[49:110,1], 'o', color='g', label = 'class2')
     plt.plot(contribute[110:148,0], contribute[110:148,1], 'o', color='b', label = 'class3')
@@ -134,6 +161,19 @@ if __name__ == '__main__':
     rH1, rH2, rH3 = Hessian(ry1, contribute, target)+I, Hessian(ry2, contribute, target)+I, Hessian(ry3, contribute, target)+I
     rE = cross(ry1, ry2, ry3, target)
     rLoss = np.hstack((rE))
+    """-----------"""
+    ry = np.hstack((ry1, ry2, ry3))
+    for n in range(len(target)):
+        ry[n, np.argmax(ry[n])] = 1
+    ry = np.round(ry)
+    raccuracy = 0
+    raccuracy_rate = []
+    for n in range(len(target)):
+        if np.argmax(ry[n]) == np.argmax(target[n]):
+            raccuracy = raccuracy + 1
+    raccuracy = raccuracy/len(target)
+    raccuracy_rate.append(raccuracy)
+    """-----------"""
     #
     counter = 1
     while epsilon < rE:
@@ -146,13 +186,26 @@ if __name__ == '__main__':
         rH1, rH2, rH3 = Hessian(ry1, contribute, target), Hessian(ry2, contribute, target), Hessian(ry3, contribute, target)
         rE = cross(ry1, ry2, ry3, target)
         rLoss = np.hstack((rLoss, rE))
+        """-----------"""
+        ry = np.hstack((ry1, ry2, ry3))
+        for n in range(len(target)):
+            ry[n, np.argmax(ry[n])] = 1
+        ry = np.round(ry)
+        for n in range(len(target)):
+            if np.argmax(ry[n]) == np.argmax(target[n]):
+                raccuracy = raccuracy + 1
+        raccuracy = raccuracy/len(target)
+        raccuracy_rate.append(raccuracy)
+        """-----------"""
         counter = counter + 1
     
-    #
-    plt.figure(15)
+    # learning curve of entropy
+    plt.figure(17)
     plt.plot(range(0, counter), rLoss)
+    # the accuracy of classifcation
+    plt.figure(18)
+    plt.plot(range(0, counter), raccuracy_rate)
     
-    #
     # test data
     rtest = np.array(test[:,0:2])
     rat1, rat2, rat3 = activations(rw1, rtest, rtest), activations(rw2, rtest, rtest), activations(rw3, rtest, rtest)
@@ -160,4 +213,5 @@ if __name__ == '__main__':
     ryt = np.hstack((ryt1, ryt2, ryt3))
     for n in range(30):
         ryt[n, np.argmax(ryt[n])] = 1
+    ryt = np.round(ryt)
     print(np.round(ryt))
