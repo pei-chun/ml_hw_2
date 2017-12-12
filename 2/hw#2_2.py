@@ -184,5 +184,3 @@ if __name__ == '__main__':
     plt.plot(data[0:N[3]], target[0:N[3]], 'o', label='target value')
     plt.plot(x, y80, 'r-')
     plt.fill_between(x, up80.reshape(-1), low80.reshape(-1), color='pink')
-    
-    
